@@ -18,13 +18,13 @@ def HA(df : pd.DataFrame) -> pd.DataFrame:
 def downsample(df: pd.DataFrame, N: int, method: str = 'coarse') -> pd.DataFrame:
     assert method in ['fine', 'coarse']
 
-    if method == 'coarse':
-        L = df.low.rolling(N).apply(np.ndarray.min)
-        H = df.high.rolling(N).apply(np.ndarray.max)
-        O = df.open.rolling(N).apply(lambda a: a[0])
-        C = df.close.rolling(N).apply(lambda a: a[-1])
-        V = df.volume.rolling(N).apply(np.ndarray.sum)
+    L = df.low.rolling(N).apply(np.ndarray.min)
+    H = df.high.rolling(N).apply(np.ndarray.max)
+    O = df.open.rolling(N).apply(lambda a: a[0])
+    C = df.close.rolling(N).apply(lambda a: a[-1])
+    V = df.volume.rolling(N).apply(np.ndarray.sum)
 
+    if method == 'coarse':
         ix = (len(df) + N - 1) % N
         rv = pd.DataFrame.from_items([
             #('ts', ts[ix::N]),
@@ -37,7 +37,21 @@ def downsample(df: pd.DataFrame, N: int, method: str = 'coarse') -> pd.DataFrame
         rv.index = df.index[(len(df) % N)::N]
 
         return rv
-    elif method == 'coarse':
-        pass
-    return df
+    elif method == 'fine':
+        rv = [pd.DataFrame.from_items([
+            #('ts', ts[ix::N]),
+            ('low', L[ix::N]),
+            ('high', H[ix::N]),
+            ('open', O[ix::N]),
+            ('close', C[ix::N]),
+            ('volume', V[ix::N]),
+        # the trick below is needed because except for the last dataframe in the tuple
+        # the remaining N-1 ones will have the first row with NaNs. Here we have an 'if'
+        # which allows us to drop the first conditionally for these.
+        ]).iloc[(0 if ix == N - 1 else 1)::, :]
+            for ix in range(0, N)]
 
+        rv = pd.concat(rv).sort_index()
+        rv.index = df.index[:-(N - 1)]
+
+        return rv
