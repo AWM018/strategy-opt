@@ -3,6 +3,8 @@
 import decimal
 from .Decimal import *
 
+HUNDRED = Dec('100')
+
 import pandas as pd
 
 class Wallet(object):
@@ -19,20 +21,49 @@ class Wallet(object):
         self.fee = Dec(fee)
         self.accumulate_excess = bool(accumulate_excess)
         self.excess = ZERO
-        self.changes = None
+
+        self.history_ts = []
+        self.history_base = []
+        self.history_excess = []
+        self.history_instrument = []
 
 
-    def buy(self, fraction: decimal.Decimal, ts: float):
-        pass
+    def buy(self, price: decimal.Decimal, fraction: decimal.Decimal, ts: int):
+        price = Dec(price)
+        fraction = min(Dec(fraction), ONE)
+        ts = int(ts)
+
+        # selling currency
+        if self.accumulate_excess:
+            to_sell = min(self.base_limit, self.base) * fraction
+        else:
+            to_sell = self.base * fraction
+
+        sold = (to_sell / price) / (ONE + self.fee / HUNDRED)
+        self.instrument += sold
+        self.base -= to_sell
+
+        self.history_ts.append(ts)
+        self.history_base.append(self.base)
+        self.history_excess.append(self.excess)
+        self.history_instrument.append(self.instrument)
 
 
-    def sell(self, fraction: decimal.Decimal, ts: float):
+    def sell(self, price: decimal.Decimal, fraction: decimal.Decimal, ts: int):
         pass
 
 
     @property
     def history(self):
-        return self.changes
+        rv = pd.DataFrame.from_dict(
+            {
+                'ts': self.history_ts,
+                'base': self.history_base,
+                'excess': self.history_excess,
+                'instrument': self.history_instrument,
+            }
+        ).set_index('ts')
+        return rv
 
 
     @property
