@@ -50,7 +50,23 @@ class Wallet(object):
 
 
     def sell(self, price: decimal.Decimal, fraction: decimal.Decimal, ts: int):
-        pass
+        price = Dec(price)
+        fraction = min(Dec(fraction), ONE)
+        ts = int(ts)
+
+        # selling instrument
+        to_sell = self.instrument * fraction
+        sold = to_sell * price / (ONE + self.fee / HUNDRED)
+        self.instrument -= to_sell
+        self.base += sold
+        if self.base > self.base_limit:
+            self.excess += self.base - self.base_limit
+            self.base = self.base_limit
+
+        self.history_ts.append(ts)
+        self.history_base.append(self.base)
+        self.history_excess.append(self.excess)
+        self.history_instrument.append(self.instrument)
 
 
     @property
