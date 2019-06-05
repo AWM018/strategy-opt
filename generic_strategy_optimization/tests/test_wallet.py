@@ -13,6 +13,7 @@ import pytest
 
 QUARTER = Dec('0.25')
 HALF = Dec('0.5')
+TWO = Dec('2.')
 FOUR = Dec('4.')
 FIVE = Dec('5.')
 SIX = Dec('6.')
@@ -104,20 +105,37 @@ def test_buy_with_nothing_buys_nothing(full_wallet):
     )
 
 
-def __test_can_buy_instrument_with_some_base_and_then_sell_with_loss_with_no_excess_accumulated(empty_wallet):
+def test_can_buy_instrument_with_some_base_and_then_sell_with_loss_with_no_excess_accumulated(empty_wallet):
 
     empty_wallet.buy(price=FIVE, fraction=HALF, ts=1559512879)
-    print(empty_wallet.balance)
     empty_wallet.sell(price=FOUR, fraction=HALF, ts=1559513879)
 
-    print(empty_wallet.balance)
-    assert empty_wallet.balance == (Dec('0.1') / Dec('1.001') , HALF, ZERO)
+    assert empty_wallet.balance == (
+        HALF * (Dec('0.1') / Dec('1.001')),
+        HALF * FOUR * Dec('0.1') / Dec('1.001') / Dec('1.001') + HALF,
+        ZERO)
     assert_frame_equal(
         empty_wallet.history,
         pd.DataFrame.from_items([
-            ['ts', [1559512879]],
-            ['base', [HALF]],
+            ['ts', [1559512879, 1559513879]],
+            ['base', [HALF, HALF * FOUR * Dec('0.1') / Dec('1.001') / Dec('1.001') + HALF]],
+            ['excess', [ZERO, ZERO]],
+            ['instrument', [Dec('0.1') / Dec('1.001'), HALF * (Dec('0.1') / Dec('1.001'))]],
+        ]).set_index('ts')
+    )
+
+
+def test_sell_with_nothing_sells_nothing(empty_wallet):
+
+    empty_wallet.sell(price=FOUR, fraction=HALF, ts=1559513879)
+
+    assert empty_wallet.balance == (ZERO, ONE, ZERO)
+    assert_frame_equal(
+        empty_wallet.history,
+        pd.DataFrame.from_items([
+            ['ts', [1559513879]],
+            ['base', [ONE]],
             ['excess', [ZERO]],
-            ['instrument', [Dec('0.1') / Dec('1.001')]],
+            ['instrument', [ZERO]],
         ]).set_index('ts')
     )
