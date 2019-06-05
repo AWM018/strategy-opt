@@ -17,6 +17,7 @@ TWO = Dec('2.')
 FOUR = Dec('4.')
 FIVE = Dec('5.')
 SIX = Dec('6.')
+TEN = Dec('10.')
 
 
 @pytest.fixture
@@ -28,6 +29,18 @@ def empty_wallet():
 @pytest.fixture
 def full_wallet():
     rv = Wallet(instrument=ONE, base=ZERO, base_limit=ONE, fee=Dec('0.1'), accumulate_excess=True)
+    return rv
+
+
+@pytest.fixture
+def full_wallet_wout_limit():
+    rv = Wallet(instrument=ONE, base=ZERO, base_limit=ONE, fee=Dec('0.1'), accumulate_excess=False)
+    return rv
+
+
+@pytest.fixture
+def full_wallet_with_high_limit():
+    rv = Wallet(instrument=ONE, base=ZERO, base_limit=TEN, fee=Dec('0.1'), accumulate_excess=True)
     return rv
 
 
@@ -137,5 +150,73 @@ def test_sell_with_nothing_sells_nothing(empty_wallet):
             ['base', [ONE]],
             ['excess', [ZERO]],
             ['instrument', [ZERO]],
+        ]).set_index('ts')
+    )
+
+
+def test_excess_is_not_accumulated_after_sell(full_wallet_wout_limit):
+
+    wallet = full_wallet_wout_limit
+    wallet.sell(price=FIVE, fraction=HALF, ts=1559512879)
+
+    assert wallet.balance == (HALF, HALF * FIVE / Dec('1.001'), ZERO)
+    assert_frame_equal(
+        wallet.history,
+        pd.DataFrame.from_items([
+            ['ts', [1559512879]],
+            ['base', [HALF * FIVE / Dec('1.001')]],
+            ['excess', [ZERO]],
+            ['instrument', [HALF]],
+        ]).set_index('ts')
+    )
+
+
+def test_excess_is_accumulated_after_sell(full_wallet):
+
+    wallet = full_wallet
+    wallet.sell(price=FIVE, fraction=HALF, ts=1559512879)
+
+    assert wallet.balance == (HALF, ONE, HALF * FIVE / Dec('1.001') - ONE)
+    assert_frame_equal(
+        wallet.history,
+        pd.DataFrame.from_items([
+            ['ts', [1559512879]],
+            ['base', [ONE]],
+            ['excess', [HALF * FIVE / Dec('1.001') - ONE]],
+            ['instrument', [HALF]],
+        ]).set_index('ts')
+    )
+
+
+def test_excess_is_not_accumulated_after_sell_with_high_limit(full_wallet_with_high_limit):
+
+    wallet = full_wallet_with_high_limit
+    wallet.sell(price=FIVE, fraction=HALF, ts=1559512879)
+
+    assert wallet.balance == (HALF, HALF * FIVE / Dec('1.001'), ZERO)
+    assert_frame_equal(
+        wallet.history,
+        pd.DataFrame.from_items([
+            ['ts', [1559512879]],
+            ['base', [HALF * FIVE / Dec('1.001')]],
+            ['excess', [ZERO]],
+            ['instrument', [HALF]],
+        ]).set_index('ts')
+    )
+
+
+def test_excess_is_not_accumulated_after_sell_below_limit(full_wallet):
+
+    wallet = full_wallet
+    wallet.sell(price=HALF, fraction=HALF, ts=1559512879)
+
+    assert wallet.balance == (HALF, HALF * HALF / Dec('1.001'), ZERO)
+    assert_frame_equal(
+        wallet.history,
+        pd.DataFrame.from_items([
+            ['ts', [1559512879]],
+            ['base', [HALF * HALF / Dec('1.001')]],
+            ['excess', [ZERO]],
+            ['instrument', [HALF]],
         ]).set_index('ts')
     )

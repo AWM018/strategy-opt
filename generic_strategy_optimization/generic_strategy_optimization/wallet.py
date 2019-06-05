@@ -59,7 +59,7 @@ class Wallet(object):
         sold = to_sell * price / (ONE + self.fee / HUNDRED)
         self.instrument -= to_sell
         self.base += sold
-        if self.base > self.base_limit:
+        if self.accumulate_excess and self.base > self.base_limit:
             self.excess += self.base - self.base_limit
             self.base = self.base_limit
 
