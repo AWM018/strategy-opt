@@ -1,5 +1,7 @@
 # -*- coding: utf-8 -*-
 
+from typing import Tuple
+
 import decimal
 from .Decimal import *
 
@@ -70,7 +72,7 @@ class Wallet(object):
 
 
     @property
-    def history(self):
+    def history(self) -> pd.DataFrame:
         rv = pd.DataFrame.from_dict(
             {
                 'ts': self.history_ts,
@@ -83,5 +85,5 @@ class Wallet(object):
 
 
     @property
-    def balance(self):
+    def balance(self) -> Tuple:
         return self.instrument, self.base, self.excess

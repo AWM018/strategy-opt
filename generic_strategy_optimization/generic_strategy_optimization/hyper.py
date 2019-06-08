@@ -3,7 +3,7 @@
 
 from typing import Dict, Callable
 
-def evaluate(objective: Callable, data_gen: Callable, space: Dict, neval: int = 500):
+def evaluate(objective: Callable, data_gen: Callable, space: Dict, neval: int = 500) -> Dict:
     from hyperopt import fmin, tpe
     from functools import partial
 
