@@ -18,11 +18,11 @@ def HA(df : pd.DataFrame) -> pd.DataFrame:
 def downsample(df: pd.DataFrame, N: int, method: str = 'coarse') -> pd.DataFrame:
     assert method in ['fine', 'coarse']
 
-    L = df.low.rolling(N).apply(np.ndarray.min)
-    H = df.high.rolling(N).apply(np.ndarray.max)
+    L = df.low.rolling(N).apply(min)
+    H = df.high.rolling(N).apply(max)
     O = df.open.rolling(N).apply(lambda a: a[0])
     C = df.close.rolling(N).apply(lambda a: a[-1])
-    V = df.volume.rolling(N).apply(np.ndarray.sum)
+    V = df.volume.rolling(N).apply(sum)
 
     if method == 'coarse':
         ix = (len(df) + N - 1) % N
