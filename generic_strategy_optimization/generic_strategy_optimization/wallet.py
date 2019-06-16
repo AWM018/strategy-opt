@@ -30,6 +30,9 @@ class Wallet(object):
         self.history_instrument = []
 
 
+    def __repr__(self):
+        return '<base={:.8f},instrument={:.8f},excess={:.8f}>'.format(self.base, self.instrument, self.excess)
+
     def buy(self, price: decimal.Decimal, fraction: decimal.Decimal, ts: int):
         price = Dec(price)
         fraction = min(Dec(fraction), ONE)
