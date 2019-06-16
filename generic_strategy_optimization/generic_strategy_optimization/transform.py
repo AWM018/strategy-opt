@@ -52,6 +52,9 @@ def downsample(df: pd.DataFrame, N: int, method: str = 'coarse') -> pd.DataFrame
             for ix in range(0, N)]
 
         rv = pd.concat(rv).sort_index()
-        rv.index = df.index[:-(N - 1)]
+        if N > 1:
+            rv.index = df.index[:-(N - 1)]
+        else:
+            rv.index = df.index
 
         return rv

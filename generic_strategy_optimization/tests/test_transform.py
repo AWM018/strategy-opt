@@ -439,3 +439,57 @@ ts
             ],
             columns=('ts', 'low', 'high', 'open', 'close', 'volume')).set_index('ts')
         )
+
+
+def test_coarse_downsample_noop_works_with_8row_candles(candles_5m_40rows):
+    """
+Input:
+               low    high    open   close      volume
+ts
+1513930800  628.53  635.46  629.37  635.24  205.974540
+1513931100  631.00  635.68  635.24  634.21   74.753693
+1513931400  633.58  653.76  633.58  653.36  128.697284
+1513931700  650.22  664.66  653.42  654.77  189.076460
+1513932000  650.26  653.93  653.19  650.26   85.447041
+1513932300  641.64  651.06  650.26  647.68  169.788925
+1513932600  646.55  653.74  647.67  650.00  103.725013
+1513932900  649.90  653.68  649.99  651.99  113.936234
+
+Output:
+[same as input]
+    """
+
+    candles = candles_5m_40rows.iloc[:8]
+
+    df = downsample(candles, 1, 'coarse')
+
+    assert len(df) == len(candles)
+    assert (df.index == candles.index).all()
+    assert_frame_equal(df, candles)
+
+
+def test_fine_downsample_noop_works_with_8row_candles(candles_5m_40rows):
+    """
+Input:
+               low    high    open   close      volume
+ts
+1513930800  628.53  635.46  629.37  635.24  205.974540
+1513931100  631.00  635.68  635.24  634.21   74.753693
+1513931400  633.58  653.76  633.58  653.36  128.697284
+1513931700  650.22  664.66  653.42  654.77  189.076460
+1513932000  650.26  653.93  653.19  650.26   85.447041
+1513932300  641.64  651.06  650.26  647.68  169.788925
+1513932600  646.55  653.74  647.67  650.00  103.725013
+1513932900  649.90  653.68  649.99  651.99  113.936234
+
+Output:
+[same as input]
+    """
+
+    candles = candles_5m_40rows.iloc[:8]
+
+    df = downsample(candles, 1, 'fine')
+
+    assert len(df) == len(candles)
+    assert (df.index == candles.index).all()
+    assert_frame_equal(df, candles)
