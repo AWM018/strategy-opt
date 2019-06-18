@@ -8,13 +8,16 @@ import bz2
 import json
 import pandas as pd
 import numpy as np
+import datetime
 
 
 DIFF = 1 * 60 * 1000
+do_split = True
+
 fname = "/repo/python-binance/examples/Binance_LTCUSDT_1m_1513135920000-1514764800000.json.bz2"
 fname = '/repo/python-binance/examples/Binance_LTCUSDT_1m_1514764800000-1546300800000.json.bz2'
 fname = '/repo/python-binance/examples/Binance_LTCUSDT_1m_1546300800000-1559001600000.json.bz2'
-fname = '/repo/python-binance/examples/Binance_LTCUSDT_1m_1513135920000-1559001600000.json.bz2'
+fname = 'Binance_LTCUSDT_1m_1513135920000-1559001600000.json.bz2'
 
 with bz2.open(fname, 'rt') as f:
     trades = json.loads(f.read())
@@ -36,3 +39,16 @@ with bz2.open(fname, 'rt') as f:
     assert(len(epochs) == sum(lengths))
 
     print("Top-N longest ranges {}".format(sorted(lengths, reverse=True)[:12]))
+
+    if do_split:
+        for begin in range(len(bounds) - 1):
+            ts_begin = trades[bounds[begin]][0]
+            ts_end = trades[bounds[begin + 1] - 1][0]
+
+            dt_begin = datetime.datetime.utcfromtimestamp(ts_begin // 1000).isoformat()
+            dt_end = datetime.datetime.utcfromtimestamp(ts_end // 1000).isoformat()
+            ofname = 'out_{}-{}.json.bz2'.format(ts_begin, ts_end)
+            print('{} -- {} {:>6d}  {}'.format(dt_begin, dt_end, bounds[begin + 1] - bounds[begin], ofname))
+
+            with bz2.open(ofname, 'wt') as ofile:
+                ofile.writelines(json.dumps(trades[bounds[begin]:bounds[begin + 1]]))
