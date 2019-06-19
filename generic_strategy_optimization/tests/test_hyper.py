@@ -18,13 +18,14 @@ def linear_data():
 
 def test_evaluate_finds_minimum(linear_data):
 
-    def objective(data_gen, params):
+    def objective(data_gen, static_space, params):
         rv = np.sum((data_gen() - params['v'] + 3.14) ** 2)
         return rv
 
     rv = evaluate(
         objective=objective,
         data_gen=lambda: linear_data,
+        static_space={},
         space={'v': hp.uniform('v', -10, 10)},
         neval=250
         )

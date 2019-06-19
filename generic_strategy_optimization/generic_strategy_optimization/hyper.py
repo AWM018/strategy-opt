@@ -3,7 +3,7 @@
 
 from typing import Dict, Callable
 
-def evaluate(objective: Callable, data_gen: Callable, space: Dict, neval: int = 500) -> Dict:
+def evaluate(objective: Callable, data_gen: Callable, static_space: Dict, space: Dict, neval: int = 500) -> Dict:
     from hyperopt import fmin, tpe
     from functools import partial
 
@@ -12,7 +12,7 @@ def evaluate(objective: Callable, data_gen: Callable, space: Dict, neval: int = 
     assert isinstance(space, dict)
 
     best = fmin(
-            fn=partial(objective, data_gen),
+            fn=partial(objective, data_gen, static_space),
             space=space,
             algo=tpe.suggest,
             max_evals=neval,
